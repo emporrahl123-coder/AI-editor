@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub AI Editor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <i class="fab fa-github"></i>
+                <h1>GitHub AI Editor</h1>
+            </div>
+            <p class="tagline">Edit GitHub repositories with natural language</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Connection Status -->
+            <div class="status-cards">
+                <div class="status-card" id="github-status">
+                    <i class="fab fa-github"></i>
+                    <h3>GitHub</h3>
+                    <p class="status-text">Checking...</p>
+                </div>
+                <div class="status-card" id="ai-status">
+                    <i class="fas fa-robot"></i>
+                    <h3>AI</h3>
+                    <p class="status-text">Checking...</p>
+                </div>
+            </div>
+
+            <!-- Repository Form -->
+            <div class="form-card">
+                <h2><i class="fas fa-edit"></i> Edit Repository</h2>
+                
+                <form id="editForm">
+                    <div class="form-group">
+                        <label for="repoUrl">
+                            <i class="fas fa-link"></i> GitHub Repository URL
+                        </label>
+                        <input type="url" id="repoUrl" placeholder="https://github.com/username/repository" required>
+                        <small class="form-help">Public repositories only. Make sure you have write access.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="request">
+                            <i class="fas fa-comment-dots"></i> What would you like to change?
+                        </label>
+                        <textarea id="request" rows="5" placeholder="Describe the changes you want to make...
+Examples:
+• Add docstrings to all Python functions
+• Fix the bug in login function
+• Refactor the API endpoint to use async
+• Update README with installation instructions" required></textarea>
+                        <small class="form-help">Be specific about what you want to change.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="branchName">
+                            <i class="fas fa-code-branch"></i> Branch Name (Optional)
+                        </label>
+                        <input type="text" id="branchName" placeholder="ai-edit-description">
+                        <small class="form-help">Leave empty to auto-generate</small>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="checkbox">
+                            <input type="checkbox" id="createPR" checked>
+                            <span>Create Pull Request</span>
+                        </label>
+                        <label class="checkbox">
+                            <input type="checkbox" id="previewFirst">
+                            <span>Preview changes first</span>
+                        </label>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" id="previewBtn" class="btn btn-secondary">
+                            <i class="fas fa-eye"></i> Preview Changes
+                        </button>
+                        <button type="submit" id="submitBtn" class="btn btn-primary">
+                            <i class="fas fa-magic"></i> Make Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Results Section -->
+            <div id="results" class="results-card" style="display: none;">
+                <h2><i class="fas fa-spinner fa-spin" id="results-spinner"></i> <span id="results-title">Processing...</span></h2>
+                <div id="results-content"></div>
+            </div>
+
+            <!-- Examples Section -->
+            <div class="examples-card">
+                <h2><i class="fas fa-lightbulb"></i> Example Requests</h2>
+                <div class="examples-grid">
+                    <div class="example" onclick="useExample(this)">
+                        <h4>Add Documentation</h4>
+                        <p>"Add docstrings to all Python functions following Google style"</p>
+                    </div>
+                    <div class="example" onclick="useExample(this)">
+                        <h4>Bug Fix</h4>
+                        <p>"Fix the TypeError in the calculate_total function"</p>
+                    </div>
+                    <div class="example" onclick="useExample(this)">
+                        <h4>Refactor</h4>
+                        <p>"Refactor the database connection to use connection pooling"</p>
+                    </div>
+                    <div class="example" onclick="useExample(this)">
+                        <h4>Update README</h4>
+                        <p>"Update README.md with installation instructions and examples"</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>GitHub AI Editor &copy; 2024 | 
+                <a href="#" onclick="showApiDocs()">API Docs</a> | 
+                <a href="#" onclick="showAbout()">About</a>
+            </p>
+        </footer>
+    </div>
+
+    <!-- Modals -->
+    <div id="apiDocsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('apiDocsModal')">&times;</span>
+            <h2>API Documentation</h2>
+            <div class="modal-body">
+                <h3>Endpoints:</h3>
+                <pre><code>POST /api/edits/execute
+Content-Type: application/json
+
+{
+  "repo_url": "https://github.com/username/repo",
+  "request": "Your edit request",
+  "branch_name": "optional",
+  "create_pr": true
+}</code></pre>
+                <p>See <a href="/api/config/summary" target="_blank">/api/config/summary</a> for configuration.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="aboutModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('aboutModal')">&times;</span>
+            <h2>About GitHub AI Editor</h2>
+            <div class="modal-body">
+                <p>This tool uses AI to help you edit GitHub repositories through natural language requests.</p>
+                <p><strong>Features:</strong></p>
+                <ul>
+                    <li>Analyzes repository structure</li>
+                    <li>Generates intelligent edit plans</li>
+                    <li>Validates changes for safety</li>
+                    <li>Creates pull requests automatically</li>
+                </ul>
+                <p><strong>Security:</strong> Never commits directly to main branch, validates all changes.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
