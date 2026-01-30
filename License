@@ -1,0 +1,144 @@
+
+## Step 3: Create Configuration Module
+
+### `config.py`
+```python
+"""
+Configuration module for GitHub AI Editor
+"""
+
+import os
+from dataclasses import dataclass, field
+from typing import List, Optional
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+@dataclass
+class GitHubConfig:
+    """GitHub API configuration"""
+    token: str = field(default_factory=lambda: os.getenv("GITHUB_TOKEN", ""))
+    api_url: str = field(default_factory=lambda: os.getenv("GITHUB_API_URL", "https://api.github.com"))
+    
+    def validate(self) -> List[str]:
+        """Validate GitHub configuration"""
+        errors = []
+        if not self.token:
+            errors.append("GitHub token is required")
+        if not self.token.startswith("ghp_") and not self.token.startswith("github_pat_"):
+            errors.append("GitHub token format appears invalid")
+        return errors
+
+@dataclass
+class OpenAIConfig:
+    """OpenAI API configuration"""
+    api_key: str = field(default_factory=lambda: os.getenv("OPENAI_API_KEY", ""))
+    model: str = field(default_factory=lambda: os.getenv("OPENAI_MODEL", "gpt-4-1106-preview"))
+    max_tokens: int = field(default_factory=lambda: int(os.getenv("OPENAI_MAX_TOKENS", "4000")))
+    temperature: float = field(default_factory=lambda: float(os.getenv("OPENAI_TEMPERATURE", "0.1")))
+    
+    def validate(self) -> List[str]:
+        """Validate OpenAI configuration"""
+        errors = []
+        if not self.api_key:
+            errors.append("OpenAI API key is required")
+        if not self.api_key.startswith("sk-"):
+            errors.append("OpenAI API key format appears invalid")
+        return errors
+
+@dataclass
+class AppConfig:
+    """Application configuration"""
+    debug: bool = field(default_factory=lambda: os.getenv("APP_DEBUG", "True").lower() == "true")
+    port: int = field(default_factory=lambda: int(os.getenv("APP_PORT", "5000")))
+    host: str = field(default_factory=lambda: os.getenv("APP_HOST", "0.0.0.0"))
+    secret_key: str = field(default_factory=lambda: os.getenv("APP_SECRET_KEY", "dev-secret-key-change-me"))
+    
+    def validate(self) -> List[str]:
+        """Validate app configuration"""
+        errors = []
+        if not self.secret_key or self.secret_key == "dev-secret-key-change-me":
+            errors.append("Please set a secure APP_SECRET_KEY in .env file")
+        return errors
+
+@dataclass
+class FileConfig:
+    """File handling configuration"""
+    max_file_size_mb: int = field(default_factory=lambda: int(os.getenv("MAX_FILE_SIZE_MB", "5")))
+    allowed_extensions: List[str] = field(default_factory=lambda: 
+        os.getenv("ALLOWED_EXTENSIONS", ".py,.js,.ts,.jsx,.tsx,.md,.json,.txt,.yml,.yaml,.html,.css,.scss,.java,.cpp,.c,.go,.rs,.rb,.php,.sh,.dockerfile,.gitignore,.env").split(","))
+    
+    @property
+    def max_file_size_bytes(self) -> int:
+        """Get max file size in bytes"""
+        return self.max_file_size_mb * 1024 * 1024
+
+@dataclass
+class SafetyConfig:
+    """Safety configuration"""
+    validate_code: bool = field(default_factory=lambda: os.getenv("VALIDATE_CODE", "true").lower() == "true")
+    create_branch: bool = field(default_factory=lambda: os.getenv("CREATE_BRANCH", "true").lower() == "true")
+    auto_commit: bool = field(default_factory=lambda: os.getenv("AUTO_COMMIT", "false").lower() == "true")
+    require_pr_review: bool = field(default_factory=lambda: os.getenv("REQUIRE_PR_REVIEW", "false").lower() == "true")
+
+@dataclass
+class Config:
+    """Main configuration class"""
+    github: GitHubConfig = field(default_factory=GitHubConfig)
+    openai: OpenAIConfig = field(default_factory=OpenAIConfig)
+    app: AppConfig = field(default_factory=AppConfig)
+    file: FileConfig = field(default_factory=FileConfig)
+    safety: SafetyConfig = field(default_factory=SafetyConfig)
+    
+    def validate(self) -> List[str]:
+        """Validate all configurations"""
+        errors = []
+        errors.extend(self.github.validate())
+        errors.extend(self.openai.validate())
+        errors.extend(self.app.validate())
+        return errors
+    
+    def get_summary(self) -> dict:
+        """Get configuration summary (without sensitive data)"""
+        return {
+            "github": {
+                "api_url": self.github.api_url,
+                "token_set": bool(self.github.token)
+            },
+            "openai": {
+                "model": self.openai.model,
+                "max_tokens": self.openai.max_tokens,
+                "temperature": self.openai.temperature,
+                "api_key_set": bool(self.openai.api_key)
+            },
+            "app": {
+                "debug": self.app.debug,
+                "port": self.app.port,
+                "host": self.app.host
+            },
+            "file": {
+                "max_file_size_mb": self.file.max_file_size_mb,
+                "allowed_extensions": self.file.allowed_extensions
+            },
+            "safety": {
+                "validate_code": self.safety.validate_code,
+                "create_branch": self.safety.create_branch,
+                "auto_commit": self.safety.auto_commit,
+                "require_pr_review": self.safety.require_pr_review
+            }
+        }
+
+# Create global config instance
+config = Config()
+
+# Print validation errors on import
+if __name__ == "__main__":
+    errors = config.validate()
+    if errors:
+        print("Configuration errors:")
+        for error in errors:
+            print(f"  - {error}")
+    else:
+        print("Configuration is valid!")
+        print(f"Config summary: {config.get_summary()}")
