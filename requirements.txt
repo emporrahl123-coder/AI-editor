@@ -1,27 +1,31 @@
-# Core
+# === CORE DEPENDENCIES ===
+Flask==3.0.0
+gunicorn==21.2.0  # Production WSGI server
 python-dotenv==1.0.0
 requests==2.31.0
-Flask==3.0.0
 GitPython==3.1.40
 
-# AI/ML
+# === AI/ML ===
 openai==1.3.0
 
-# Code Analysis
-astroid==3.0.1
-pylint==3.0.3
-black==23.11.0
+# === WEB & API ===
+flask-cors==6.0.2
+Flask-Limiter==3.12
 
-# Utilities
+# === CODE ANALYSIS & UTILITIES ===
 pyyaml==6.0.1
 jsonschema==4.20.0
-python-magic==0.4.27
 tqdm==4.66.1
-flask-cors==6.0.2
 
-# Development
+# === DEVELOPMENT (included but optional in prod) ===
 pytest==7.4.3
 pytest-cov==4.1.0
 flake8==6.1.0
+black==23.11.0
 autopep8==2.0.4
-Flask-Limiter==3.12
+astroid==3.0.1
+pylint==3.0.3
+
+# === INSTALL PROJECT IN EDITABLE MODE ===
+# This makes the 'src' package importable
+-e .
