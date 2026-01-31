@@ -25,7 +25,3 @@ black==23.11.0
 autopep8==2.0.4
 astroid==3.0.1
 pylint==3.0.3
-
-# === INSTALL PROJECT IN EDITABLE MODE ===
-# This makes the 'src' package importable
--e .
