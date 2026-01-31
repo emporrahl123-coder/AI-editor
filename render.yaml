@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: github-ai-editor
+    runtime: python
+    region: oregon  # or your preferred region
+    plan: free  # or "starter" for paid plans
+    
+    # Build configuration
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+    
+    # Start command
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120 app:app
+    
+    # Environment variables (SET THESE IN RENDER DASHBOARD)
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: GITHUB_TOKEN
+        sync: false  # You'll set this manually in Render dashboard
+      - key: OPENAI_API_KEY
+        sync: false  # You'll set this manually in Render dashboard
+      - key: APP_SECRET_KEY
+        generateValue: true  # Render will generate a secure key
+    
+    # Auto-deploy from Git
+    autoDeploy: true
+    
+    # Health check
+    healthCheckPath: /api/health
+    initialDelaySec: 15
